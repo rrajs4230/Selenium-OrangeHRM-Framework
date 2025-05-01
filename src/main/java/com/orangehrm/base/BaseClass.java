@@ -2,6 +2,9 @@ package com.orangehrm.base;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -84,6 +87,7 @@ public class BaseClass {
             try {
                 webDriver.quit();
                 logger.info("WebDriver quit successfully.");
+                cleanupChromeProfile();
             } catch (Exception e) {
                 logger.warn("Exception while quitting WebDriver: " + e.getMessage());
             }
@@ -99,9 +103,22 @@ public class BaseClass {
         switch (browser) {
             case "chrome":
                 ChromeOptions options = new ChromeOptions();
-                options.addArguments("--headless=new", "--disable-gpu", "--disable-notifications", "--disable-dev-shm-usage", "--no-sandbox");
-                String userDataDir = System.getProperty("java.io.tmpdir") + "/chrome-profile-" + Thread.currentThread().getId();
-                options.addArguments("--user-data-dir=" + userDataDir);
+                options.addArguments(
+                    "--headless=new",
+                    "--disable-gpu",
+                    "--disable-notifications",
+                    "--disable-dev-shm-usage",
+                    "--no-sandbox",
+                    "--remote-allow-origins=*"
+                );
+                
+                // Only use user-data-dir if explicitly configured
+                if (prop.getProperty("use.chrome.profile", "false").equalsIgnoreCase("true")) {
+                    String userDataDir = createUniqueChromeProfileDir();
+                    options.addArguments("--user-data-dir=" + userDataDir);
+                    logger.info("Using Chrome profile at: " + userDataDir);
+                }
+                
                 driver.set(new ChromeDriver(options));
                 logger.info("ChromeDriver initialized with custom options.");
                 break;
@@ -123,6 +140,41 @@ public class BaseClass {
         ExtentManager.registerDriver(getDriver());
     }
 
+    private String createUniqueChromeProfileDir() {
+        try {
+            String baseDir = System.getProperty("java.io.tmpdir");
+            Path profileDir = Paths.get(baseDir, "chrome-profile-" + Thread.currentThread().getId());
+            Files.createDirectories(profileDir);
+            return profileDir.toString();
+        } catch (IOException e) {
+            logger.error("Failed to create Chrome profile directory: " + e.getMessage());
+            throw new RuntimeException("Failed to create Chrome profile directory", e);
+        }
+    }
+
+    private void cleanupChromeProfile() {
+        if (prop.getProperty("use.chrome.profile", "false").equalsIgnoreCase("true")) {
+            try {
+                String profileDir = System.getProperty("java.io.tmpdir") + "chrome-profile-" + Thread.currentThread().getId();
+                Path path = Paths.get(profileDir);
+                if (Files.exists(path)) {
+                    Files.walk(path)
+                         .sorted(java.util.Comparator.reverseOrder())
+                         .forEach(p -> {
+                             try {
+                                 Files.deleteIfExists(p);
+                             } catch (IOException e) {
+                                 logger.warn("Failed to delete profile file: " + p.toString());
+                             }
+                         });
+                    logger.info("Cleaned up Chrome profile directory: " + profileDir);
+                }
+            } catch (Exception e) {
+                logger.warn("Error cleaning up Chrome profile: " + e.getMessage());
+            }
+        }
+    }
+
     private void configureBrowser() {
         try {
             int implicitWait = Integer.parseInt(prop.getProperty("implicitWait", "10"));
@@ -133,6 +185,7 @@ public class BaseClass {
             logger.info("Navigated to URL: " + prop.getProperty("url"));
         } catch (Exception e) {
             logger.error("Error during browser configuration: " + e.getMessage());
+            throw new RuntimeException("Browser configuration failed", e);
         }
     }
 
