@@ -18,7 +18,7 @@ public class LoginPage {
 	 */
 	public LoginPage(WebDriver driver) {
 
-		this.actionDriver = BaseClass.getactionDriver();
+		this.actionDriver = BaseClass.getActionDriver();
 
 	}
 

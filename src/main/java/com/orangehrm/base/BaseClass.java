@@ -28,7 +28,7 @@ public class BaseClass {
     private static final ThreadLocal<ActionDriver> actionDriver = new ThreadLocal<>();
     private static final ThreadLocal<SoftAssert> softAssert = ThreadLocal.withInitial(SoftAssert::new);
 
-    private static Properties prop;
+    protected static Properties prop;
     public static final Logger logger = LoggerManager.getLogger(BaseClass.class);
 
     public static WebDriver getDriver() {

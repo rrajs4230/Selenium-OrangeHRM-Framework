@@ -30,7 +30,7 @@ public class HomePage {
 
 	public HomePage(WebDriver driver) {
 
-		this.actionDriver = BaseClass.getactionDriver();
+		this.actionDriver = BaseClass.getActionDriver();
 	}
 
 	// Method to verify if Admin tab is visible
