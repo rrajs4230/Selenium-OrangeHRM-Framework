@@ -15,7 +15,7 @@ public class HomePage {
 	private By adminTab = By.xpath("//span[text()='Admin']");
 	private By userIDButton = By.className("oxd-userdropdown-name");
 	private By logoutButton = By.xpath("//a[text()='Logout']");
-	private By orangeHRMlogo = By.xpath("//a[@class='oxd-brand']//img");
+	private By orangeHRMlogo = By.xpath("//div[@class='oxd-brand-banner']//img");
 	private By pimTab = By.xpath("//span[text()='PIM']");
 	private By employeeSearch = By
 			.xpath("//label[text()='Employee Name']/parent::div/following-sibling::div/div/div/input");

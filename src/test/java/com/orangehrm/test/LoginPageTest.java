@@ -2,6 +2,7 @@ package com.orangehrm.test;
 
 import org.testng.Assert;
 
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -46,7 +47,7 @@ public class LoginPageTest extends BaseClass {
 		// TestListener
 		ExtentManager.logStep("Navigating to Login Page entering username and password");
 		loginPage.login(username, password);
-		String expectedErrorMessage = "Invalid credentials1";
+		String expectedErrorMessage = "Invalid credentials";
 		Assert.assertTrue(loginPage.verifyErrorMessage(expectedErrorMessage), "Test Failed: InValid Error Message");
 		ExtentManager.logStep("Validation Successful");
 		ExtentManager.logStep("Logged out Successfully");

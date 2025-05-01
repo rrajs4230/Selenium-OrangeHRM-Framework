@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<suite name="OrangeHRMSuite" parallel="classes" thread-count="5">
+<suite name="OrangeHRMSuite">
 	<listeners>
 		<listener class-name="com.orangehrm.listners.TestListener"></listener>
 	</listeners>
-	<test name="OrangeHRMTest">
+	<test name="OrangeHRMTest_chrome">
+		<parameter name="browser" value="chrome"/>
 		<classes>
-
-			 <class name="com.orangehrm.test.DBVerificationTest"></class>
-			<!-- <class name="com.orangehrm.test.ApiTest"></class>-->
-			
-
+			<!-- <class name="com.orangehrm.test.LoginPageTest"/> -->
+			<class name="com.orangehrm.test.HomePageTest"/>
 		</classes>
-
 	</test>
-
 </suite>
