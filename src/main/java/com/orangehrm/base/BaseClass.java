@@ -13,9 +13,12 @@ import java.util.concurrent.locks.LockSupport;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
@@ -30,6 +33,7 @@ public class BaseClass {
     private static final ThreadLocal<WebDriver> driver = new ThreadLocal<>();
     private static final ThreadLocal<ActionDriver> actionDriver = new ThreadLocal<>();
     private static final ThreadLocal<SoftAssert> softAssert = ThreadLocal.withInitial(SoftAssert::new);
+    private static final ThreadLocal<ChromeDriverService> chromeService = new ThreadLocal<>();
 
     protected static Properties prop;
     public static final Logger logger = LoggerManager.getLogger(BaseClass.class);
@@ -92,9 +96,17 @@ public class BaseClass {
                 logger.warn("Exception while quitting WebDriver: " + e.getMessage());
             }
         }
+        
+        ChromeDriverService service = chromeService.get();
+        if (service != null && service.isRunning()) {
+            service.stop();
+            logger.info("ChromeDriverService stopped successfully.");
+        }
+        
         driver.remove();
         actionDriver.remove();
         softAssert.remove();
+        chromeService.remove();
     }
 
     private synchronized void launchBrowser() {
@@ -107,6 +119,7 @@ public class BaseClass {
                     "--headless=new",
                     "--disable-gpu",
                     "--disable-notifications",
+
                     "--disable-dev-shm-usage",
                     "--no-sandbox",
                     "--remote-allow-origins=*"
@@ -119,17 +132,24 @@ public class BaseClass {
                     logger.info("Using Chrome profile at: " + userDataDir);
                 }
                 
+
+                
+               
                 driver.set(new ChromeDriver(options));
-                logger.info("ChromeDriver initialized with custom options.");
+                logger.info("ChromeDriver initialized successfully with headless mode.");
                 break;
 
             case "firefox":
-                driver.set(new FirefoxDriver());
+                FirefoxOptions firefoxOptions = new FirefoxOptions();
+                firefoxOptions.addArguments("--headless");
+                driver.set(new FirefoxDriver(firefoxOptions));
                 logger.info("FirefoxDriver initialized.");
                 break;
 
             case "edge":
-                driver.set(new EdgeDriver());
+                EdgeOptions edgeOptions = new EdgeOptions();
+                edgeOptions.addArguments("--headless=new");
+                driver.set(new EdgeDriver(edgeOptions));
                 logger.info("EdgeDriver initialized.");
                 break;
 
