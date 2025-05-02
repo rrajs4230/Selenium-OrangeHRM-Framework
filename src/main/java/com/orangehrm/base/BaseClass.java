@@ -91,7 +91,6 @@ public class BaseClass {
             try {
                 webDriver.quit();
                 logger.info("WebDriver quit successfully.");
-                cleanupChromeProfile();
             } catch (Exception e) {
                 logger.warn("Exception while quitting WebDriver: " + e.getMessage());
             }
@@ -119,22 +118,17 @@ public class BaseClass {
                     "--headless=new",
                     "--disable-gpu",
                     "--disable-notifications",
-
-                    "--disable-dev-shm-usage",
-                    "--no-sandbox",
-                    "--remote-allow-origins=*"
+                    "--disable-dev-shm-usage",  // Crucial for Docker/Linux
+                    "--no-sandbox",             // Needed for Jenkins/Docker
+                    "--remote-allow-origins=*",
+                    "--window-size=1920,1080"
                 );
                 
-                // Only use user-data-dir if explicitly configured
-                if (prop.getProperty("use.chrome.profile", "false").equalsIgnoreCase("true")) {
-                    String userDataDir = createUniqueChromeProfileDir();
-                    options.addArguments("--user-data-dir=" + userDataDir);
-                    logger.info("Using Chrome profile at: " + userDataDir);
-                }
+                // Disable extensions and automation flags
+                options.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
+                options.setExperimentalOption("useAutomationExtension", false);
                 
-
-                
-               
+                // Selenium 4.6+ will auto-download ChromeDriver
                 driver.set(new ChromeDriver(options));
                 logger.info("ChromeDriver initialized successfully with headless mode.");
                 break;
@@ -158,41 +152,6 @@ public class BaseClass {
         }
 
         ExtentManager.registerDriver(getDriver());
-    }
-
-    private String createUniqueChromeProfileDir() {
-        try {
-            String baseDir = System.getProperty("java.io.tmpdir");
-            Path profileDir = Paths.get(baseDir, "chrome-profile-" + Thread.currentThread().getId());
-            Files.createDirectories(profileDir);
-            return profileDir.toString();
-        } catch (IOException e) {
-            logger.error("Failed to create Chrome profile directory: " + e.getMessage());
-            throw new RuntimeException("Failed to create Chrome profile directory", e);
-        }
-    }
-
-    private void cleanupChromeProfile() {
-        if (prop.getProperty("use.chrome.profile", "false").equalsIgnoreCase("true")) {
-            try {
-                String profileDir = System.getProperty("java.io.tmpdir") + "chrome-profile-" + Thread.currentThread().getId();
-                Path path = Paths.get(profileDir);
-                if (Files.exists(path)) {
-                    Files.walk(path)
-                         .sorted(java.util.Comparator.reverseOrder())
-                         .forEach(p -> {
-                             try {
-                                 Files.deleteIfExists(p);
-                             } catch (IOException e) {
-                                 logger.warn("Failed to delete profile file: " + p.toString());
-                             }
-                         });
-                    logger.info("Cleaned up Chrome profile directory: " + profileDir);
-                }
-            } catch (Exception e) {
-                logger.warn("Error cleaning up Chrome profile: " + e.getMessage());
-            }
-        }
     }
 
     private void configureBrowser() {
